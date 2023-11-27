@@ -55,6 +55,7 @@ def export_text(path, name, string):
 home_path=os.getcwd()
 source_path=os.path.join(home_path, "source")
 output_path=os.path.join(home_path, "output")
+msg_path=os.path.join(home_path, "msg")
 
 #genera le cartelle di funzionamento
 generate_folder([source_path, output_path])
@@ -67,14 +68,10 @@ file_name=source_file.replace(".mp3", "")           #elimina estensione dal nome
 project_path = os.path.join( output_path, file_name )   #percorso di output del progetto
 generate_folder( [project_path] )   #genera la cartella di progetto
 
-#PARAMETRI WHISPER
-#model_size = "large-v3"
-models_list=("tiny", "base", "small", "medium", "large", "large-v2", "large-v3")
-model_size = choose_from_list(models_list, "DIMENSIONE DEL MODELLO:")
-model = WhisperModel(model_size, compute_type="int8")
+print("\nSto aprendo il file. Attendi...\n")
 
 #apre 'source file'
-start_moment=time.time()
+model = WhisperModel("tiny", compute_type="int8") #SERVE SOLO PER LEGGERE LE INFORMAZIONI DEL FILE
 segments, info = model.transcribe(
     source_file_path,
     beam_size=1,    #provare con beam_size fra 5 e 10
@@ -85,13 +82,25 @@ segments, info = model.transcribe(
 #legge e stampa info del file aperto
 language, language_prob, duration = get_info(info)
 duration=format_time(duration)
-#print(language, language_prob, duration)
 print(f"Hai scelto '{source_file}'\t[Lingua '{language}' ({language_prob*100}%), durata {duration}]\n")
+
+#PARAMETRI WHISPER
+#print("Scegliere una dimensione del modello per avviare la trascrizione.\n")
+
+msg_file=open( os.path.join(msg_path, "model_msg.txt") ,"r")
+msg=msg_file.read()
+msg_file.close()
+print(msg, "\n")
+
+models_list=("tiny", "tiny.en", "base", "base.en", "small", "small.en", "medium", "medium.en", "large", "large-v2", "large-v3")
+model_size = choose_from_list(models_list, "DIMENSIONE DEL MODELLO:")
+model = WhisperModel(model_size, compute_type="int8")
 
 ts_transcripted_text=""
 no_ts_transcripted_text=""
 c_transcripted_text=""
 
+start_moment=time.time()
 n_segments=0
 for segment in segments:
     n_segments+=1       #n° segmenti
@@ -102,10 +111,14 @@ for segment in segments:
     no_ts_transcripted_text+=f"{s_text}\n"       #trascrizione senza time stamp  (output 2)
     c_transcripted_text+=f"{s_text}"       #trascrizione continua (output 3)
 
+print(50*"-","\n")
+
 #ESPORTAZIONE DEI FILE
+print("Esportazione degli output in corso...")
 export_text(project_path, f"ts_{file_name}", ts_transcripted_text)
 export_text(project_path, f"no_ts_{file_name}", no_ts_transcripted_text)
 export_text(project_path, f"c_{file_name}", c_transcripted_text)
+print("Esportazione terminata.\n")
 
 exc_time=moment=format_time(time.time()-start_moment)
-print(f"\n\nFinito. {duration} trascritti in {exc_time}.")
+print(f"\nFinito. {duration} trascritti in {exc_time}.\nSegmenti rilevati: {n_segments}.")
