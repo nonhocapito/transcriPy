@@ -92,7 +92,7 @@ msg=msg_file.read()
 msg_file.close()
 print(msg, "\n")
 
-models_list=("tiny", "tiny.en", "base", "base.en", "small", "small.en", "medium", "medium.en", "large", "large-v2", "large-v3")
+models_list=("tiny", "tiny.en", "base", "base.en", "small", "small.en", "medium", "medium.en", "large", "large-v1", "large-v2")
 model_size = choose_from_list(models_list, "DIMENSIONE DEL MODELLO:")
 model = WhisperModel(model_size, compute_type="int8")
 
