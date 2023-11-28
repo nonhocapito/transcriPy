@@ -1,4 +1,5 @@
 from faster_whisper import WhisperModel
+from datetime import datetime
 import time
 import os
 
@@ -47,9 +48,17 @@ def files_by_format(path, ext):
     return ext_list
     
 def export_text(path, name, string):
-    file=open( os.path.join(path, f"{name}.txt"), "w" )
+    now=(datetime.now()).strftime("%H%M%S")
+    file=open( os.path.join(path, f"{name}_{now}.txt"), "w" )
     file.write(string)
     file.close
+    
+#dato in input il percorso di un file di testo, lo restituisce in forma di stringa
+def read_text(path):
+    file=open(path, "r")
+    string=file.read()
+    file.close()
+    return string
 #------------------------------------------------------------------------------
 
 home_path=os.getcwd()
@@ -81,8 +90,7 @@ segments, info = model.transcribe(
 
 #legge e stampa info del file aperto
 language, language_prob, duration = get_info(info)
-duration=format_time(duration)
-print(f"Hai scelto '{source_file}'\t[Lingua '{language}' ({language_prob*100}%), durata {duration}]\n")
+print(f"Hai scelto '{source_file}'\t[Lingua '{language}' ({language_prob*100}%), durata {format_time(duration)}]\n")
 
 #PARAMETRI WHISPER
 #print("Scegliere una dimensione del modello per avviare la trascrizione.\n")
@@ -113,12 +121,22 @@ for segment in segments:
 
 print(50*"-","\n")
 
+end_moment=time.time()
+ratio=round((end_moment-start_moment)*100/duration, 2)
+exc_time=end_moment-start_moment
+end_report=read_text( os.path.join(msg_path, "end_report.txt" )).format(origine=source_file,
+                                                                durata=format_time(duration),
+                                                                t_esecuzione=format_time(exc_time),
+                                                                rapporto=ratio,
+                                                                modello=model_size)
+
 #ESPORTAZIONE DEI FILE
 print("Esportazione degli output in corso...")
-export_text(project_path, f"ts_{file_name}", ts_transcripted_text)
-export_text(project_path, f"no_ts_{file_name}", no_ts_transcripted_text)
-export_text(project_path, f"c_{file_name}", c_transcripted_text)
+export_text(project_path, f"ts_{file_name}", end_report+3*"\n"+ts_transcripted_text)
+export_text(project_path, f"no_ts_{file_name}", end_report+3*"\n"+no_ts_transcripted_text)
+export_text(project_path, f"c_{file_name}", end_report+3*"\n"+c_transcripted_text)
 print("Esportazione terminata.\n")
 
-exc_time=moment=format_time(time.time()-start_moment)
-print(f"\nFinito. {duration} trascritti in {exc_time}.\nSegmenti rilevati: {n_segments}.")
+print("Finito!\n")
+
+print(end_report, "\n")

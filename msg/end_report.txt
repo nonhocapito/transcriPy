@@ -1,0 +1,5 @@
+File di origine:	{origine}
+Durata:			{durata}
+Tempo di trascrizione:	{t_esecuzione}
+Rapporto:		{rapporto}%
+Modello:		{modello}
